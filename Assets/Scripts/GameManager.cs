@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
 
     int activePlayer;
     int diceNumber;
+    public Dice TheDice;
 
     
 
@@ -93,12 +94,23 @@ public class GameManager : MonoBehaviour
 
     IEnumerator RollDiceDelay()
     {
-        yield return new WaitForSeconds(1);
-        diceNumber = Random.Range(1, 7);
+        yield return new WaitForSeconds(0.2f);
+        //diceNumber = Random.Range(1, 7);
 
+        //roll dice
+        TheDice.RollDice();
+
+
+
+
+    }
+
+    //called from the dice
+    public void RolledNumber(int theDiceNumber)
+    {
+        diceNumber = theDiceNumber;
         //Take Turn
         PlayerList[activePlayer].token.Turn(diceNumber);
-
     }
 
     //private void DiceButtonToggle(bool on)
@@ -125,5 +137,11 @@ public class GameManager : MonoBehaviour
         {
             PlayerList[i].RollDiceButton.SetActive(false);
         }
+    }
+
+    //execute anything that needs to happen after a player wins
+    public void ReportWinner()
+    {
+        Debug.Log(PlayerList[activePlayer].playerName + " has won!");
     }
 }

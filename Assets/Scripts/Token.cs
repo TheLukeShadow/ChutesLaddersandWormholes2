@@ -17,6 +17,9 @@ public class Token : MonoBehaviour
 
     bool isMoving;
 
+    float cTime = 0;
+    float amplitude = 0.5f;
+
 
     // Start is called before the first frame update
     void Start()
@@ -60,17 +63,31 @@ public class Token : MonoBehaviour
 
         isMoving = true;
 
-        while(stepsToMove > 0)
+        //remove token from current node
+        nodeList[routePosition].RemoveToken(this);
+
+
+        while (stepsToMove > 0)
         {
             routePosition++;
             Vector3 nextPos = Route.nodeList[routePosition].transform.position;
 
-            while(MoveToNextNode(nextPos)) { yield return null; }
+            //line movement
+            //while(MoveToNextNode(nextPos)) { yield return null; }
+
+            //arc movement
+            Vector3 startPos = Route.nodeList[routePosition -1].transform.position;
+            while (MoveInArcToNextNode(startPos, nextPos, 4f)) { yield return null; }
 
             yield return new WaitForSeconds(0.1f);
+
+            cTime = 0;
+
             stepsToMove--;
             doneSteps++;
         }
+
+       
 
         yield return new WaitForSeconds(0.1f);
         //snake/ladder check
@@ -86,7 +103,15 @@ public class Token : MonoBehaviour
                 routePosition = connectedNodeId;
             }
         }
+        //add token to new node
+        nodeList[routePosition].AddToken(this);
+
         //check win condition
+        if(doneSteps == nodeList.Count - 1)
+        {
+            GameManager.Instance.ReportWinner();
+            yield break;
+        }
 
         //update game manager
         GameManager.Instance.State = GameManager.States.SwitchPlayer;
@@ -97,6 +122,15 @@ public class Token : MonoBehaviour
     bool MoveToNextNode(Vector3 nextPos)
     {
         return nextPos != (transform.position = Vector3.MoveTowards(transform.position, nextPos, speed * Time.deltaTime));
+    }
+
+    bool MoveInArcToNextNode(Vector3 startPos, Vector3 nextPos, float arcSpeed) 
+    {
+        cTime += arcSpeed * Time.deltaTime;
+        Vector3 myPosition = Vector3.Lerp(startPos, nextPos, cTime);
+        myPosition.y += amplitude * Mathf.Sin(Mathf.Clamp01(cTime) * Mathf.PI);
+
+        return nextPos !=(transform.position = Vector3.Lerp(transform.position, myPosition, cTime));
     }
 
     public void Turn(int diceNumber)
