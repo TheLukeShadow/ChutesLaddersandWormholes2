@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     int activePlayer;
     int diceNumber;
     public Dice TheDice;
+    public WinPanel TheWinPanel;
 
     
 
@@ -40,14 +41,24 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        
         Instance = this;
+
+        for (int i = 0; i < PlayerList.Count; i++) 
+        {
+            if (SaveSettings.Players[i] == "Human") PlayerList[i].ThePlayerType = Player.PlayerType.Human;
+            if (SaveSettings.Players[i] == "CPU") PlayerList[i].ThePlayerType = Player.PlayerType.CPU;
+        }
     }
 
     private void Start()
     {
         //DiceButtonToggle(false);
         DeactivateAllButtons();
+        TheWinPanel.gameObject.SetActive(false);
+
+        activePlayer = Random.Range(0, PlayerList.Count);
+        InfoBox.instance.ShowInfo(PlayerList[activePlayer].playerName + " is taking a turn ");
     }
 
     private void Update()
@@ -67,6 +78,8 @@ public class GameManager : MonoBehaviour
                     activePlayer++;
                     activePlayer %= PlayerList.Count;
 
+                    InfoBox.instance.ShowInfo(PlayerList[activePlayer].playerName + " is taking a turn ");
+
                     State = States.Rolling;
                     break;
             }
@@ -85,6 +98,8 @@ public class GameManager : MonoBehaviour
                 case States.SwitchPlayer:
                     activePlayer++;
                     activePlayer %= PlayerList.Count;
+
+                    InfoBox.instance.ShowInfo(PlayerList[activePlayer].playerName + " is taking a turn " );
 
                     State = States.Rolling;
                     break;
@@ -109,6 +124,9 @@ public class GameManager : MonoBehaviour
     public void RolledNumber(int theDiceNumber)
     {
         diceNumber = theDiceNumber;
+
+        InfoBox.instance.ShowInfo(PlayerList[activePlayer].playerName + " has rolled a " + diceNumber);
+
         //Take Turn
         PlayerList[activePlayer].token.Turn(diceNumber);
     }
@@ -142,6 +160,8 @@ public class GameManager : MonoBehaviour
     //execute anything that needs to happen after a player wins
     public void ReportWinner()
     {
-        Debug.Log(PlayerList[activePlayer].playerName + " has won!");
+        TheWinPanel.gameObject.SetActive(true);
+        TheWinPanel.WinMessage(PlayerList[activePlayer].playerName);
+        //Debug.Log(PlayerList[activePlayer].playerName + " has won!");
     }
 }
